@@ -192,7 +192,12 @@
 <div id="loginOverlay">
   <div class="login-box">
     <h1>Admin Access</h1>
-    <p>Enter your admin password to manage sessions, speakers, and topics.</p>
+    <p>Sign in with your Supabase admin account.</p>
+    <div class="form-row" style="margin-bottom:12px">
+      <label>Email</label>
+      <input type="email" id="emailInput" placeholder="admin@example.com"
+             onkeydown="if(event.key==='Enter') login()" />
+    </div>
     <div class="form-row" style="margin-bottom:12px">
       <label>Password</label>
       <input type="password" id="pwInput" placeholder="••••••••"
@@ -225,6 +230,9 @@
       <button class="sidebar-item" onclick="nav('topics', this)">
         <span class="icon">🗳</span> Topics & Voting
       </button>
+      <button class="sidebar-item" onclick="nav('themes', this)">
+        <span class="icon">🏷</span> Themes
+      </button>
       <button class="sidebar-item" onclick="nav('applications', this)">
         <span class="icon">🎙</span> Applications
         <span id="appBadge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px"></span>
@@ -234,7 +242,8 @@
       </button>
     </nav>
     <div class="sidebar-footer">
-      <a href="index.html">← View Public Site</a>
+      <a href="index.html" style="display:block;margin-bottom:10px">← View Public Site</a>
+      <button onclick="signOut()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:7px 12px;border-radius:7px;font-size:12px;width:100%;cursor:pointer;font-family:inherit">Sign Out</button>
     </div>
   </aside>
 
@@ -324,6 +333,22 @@
       </div>
     </div>
 
+    <!-- THEMES -->
+    <div id="pg-themes" style="display:none">
+      <div class="page-header">
+        <div><div class="page-title">Themes</div><div class="page-sub">Topic and session groupings — colour-coded for the public site</div></div>
+        <button class="btn btn-brand" onclick="openThemeModal()">+ Add Theme</button>
+      </div>
+      <div class="card">
+        <table id="themesTable">
+          <thead>
+            <tr><th>Theme</th><th>Description</th><th>Colour</th><th>Order</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="themesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- APPLICATIONS -->
     <div id="pg-applications" style="display:none">
       <div class="page-header">
@@ -366,7 +391,7 @@
             <div class="form-row"><label>Platform Name</label><input id="cfg-name" /></div>
             <div class="form-row"><label>Tagline</label><input id="cfg-tagline" /></div>
             <div class="form-row"><label>Contact Email</label><input id="cfg-email" type="email" /></div>
-            <div class="form-row"><label>Admin Password</label><input id="cfg-password" type="password" placeholder="Leave blank to keep current" /></div>
+            <div class="form-row" style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:12px;color:#854d0e">Admin password is managed in your Supabase Dashboard → Authentication → Users.</div>
           </div>
           <div style="margin-top:20px">
             <button class="btn btn-brand" onclick="saveSettings()">Save Settings</button>
@@ -424,9 +449,32 @@
       <div class="form-row"><label>Recording URL (post-session)</label><input id="s-rec" placeholder="https://youtube.com/…" /></div>
       <div class="form-row">
         <label>Speakers (select multiple)</label>
-        <select id="s-speakers" multiple style="height:100px"></select>
+        <select id="s-speakers" multiple style="height:90px"></select>
+      </div>
+      <div class="form-row">
+        <label>Themes (select multiple)</label>
+        <select id="s-themes" multiple style="height:90px"></select>
       </div>
       <div class="form-row"><label>Tags (comma-separated)</label><input id="s-tags" placeholder="Architecture, AI, Enterprise" /></div>
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" id="s-ispaid" onchange="document.getElementById('s-price-row').style.display=this.checked?'':'none'" style="width:16px;height:16px">
+          Paid session
+        </label>
+      </div>
+      <div class="form-row" id="s-price-row" style="display:none">
+        <div class="form-grid two" style="gap:12px">
+          <div class="form-row"><label>Price</label><input id="s-price" type="number" step="0.01" min="0" value="0" /></div>
+          <div class="form-row">
+            <label>Currency</label>
+            <select id="s-currency">
+              <option value="USD">USD</option><option value="GBP">GBP</option>
+              <option value="EUR">EUR</option><option value="AUD">AUD</option>
+              <option value="CAD">CAD</option><option value="INR">INR</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('sessionModal')">Cancel</button>
@@ -470,6 +518,7 @@
       <div class="form-row"><label>Description</label><textarea id="t-desc"></textarea></div>
       <div class="form-row"><label>Seed Votes</label><input id="t-votes" type="number" value="0" /></div>
       <div class="form-row"><label>Tags (comma-separated)</label><input id="t-tags" /></div>
+      <div class="form-row"><label>Theme</label><select id="t-theme"><option value="">— No theme —</option></select></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('topicModal')">Cancel</button>
@@ -478,34 +527,86 @@
   </div>
 </div>
 
+<!-- ── THEME MODAL ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="themeModal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeModal('themeModal')">✕</button>
+    <h2 id="themeModalTitle">New Theme</h2>
+    <input type="hidden" id="editThemeId" />
+    <div class="form-grid">
+      <div class="form-row"><label>Theme Name</label><input id="th-name" placeholder="e.g. Architecture & Systems" /></div>
+      <div class="form-row"><label>Description</label><textarea id="th-desc" placeholder="Short summary shown on the public site"></textarea></div>
+      <div class="form-grid two">
+        <div class="form-row">
+          <label>Colour (hex)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="color" id="th-color" value="#6366f1" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;padding:2px;cursor:pointer">
+            <input id="th-color-text" placeholder="#6366f1" style="flex:1" oninput="document.getElementById('th-color').value=this.value" />
+          </div>
+        </div>
+        <div class="form-row"><label>Icon (emoji)</label><input id="th-icon" placeholder="🎯" style="font-size:18px" /></div>
+      </div>
+      <div class="form-row"><label>Sort Order</label><input id="th-order" type="number" value="0" /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('themeModal')">Cancel</button>
+      <button class="btn btn-brand" onclick="saveTheme()">Save Theme</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/db.js"></script>
 <script>
 // ─── State ──────────────────────────────────────────────────────
-let DATA = { platform:{}, sessions:[], speakers:[], topicOptions:[] };
-const registrations = JSON.parse(localStorage.getItem('cf_regs') || '{}');
+let DATA = { platform:{}, sessions:[], speakers:[], topicOptions:[], themes:[] };
 
-// ─── Login ──────────────────────────────────────────────────────
-async function init() {
-  try { const r = await fetch('data.json'); DATA = await r.json(); }
-  catch(e) { console.warn('data.json not found'); }
-  if (sessionStorage.getItem('cf_admin') === 'ok') unlock();
+// ─── Auth (Supabase) ─────────────────────────────────────────────
+async function login() {
+  const email = document.getElementById('emailInput').value.trim();
+  const pw    = document.getElementById('pwInput').value;
+  document.getElementById('loginError').textContent = '';
+  try {
+    await DB.signIn(email, pw);
+    await loadAdminData();
+    unlock();
+  } catch(e) {
+    document.getElementById('loginError').textContent = e.message || 'Login failed.';
+  }
 }
 
-function login() {
-  const pw = document.getElementById('pwInput').value;
-  if (pw === (DATA.platform.adminPassword || 'changeme123')) {
-    sessionStorage.setItem('cf_admin', 'ok');
-    unlock();
-  } else {
-    document.getElementById('loginError').textContent = 'Incorrect password.';
-  }
+async function signOut() {
+  await DB.signOut();
+  document.getElementById('loginOverlay').style.display = '';
+  document.getElementById('shell').style.display = 'none';
 }
 
 function unlock() {
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('shell').style.display = 'grid';
   nav('dashboard');
+}
+
+async function loadAdminData() {
+  const [platform, sessions, speakers, topics, themes] = await Promise.all([
+    DB.getPlatformSettings(), DB.getSessions(),
+    DB.getSpeakers(),         DB.getTopics(), DB.getThemes()
+  ]);
+  DATA = { platform, sessions, speakers, topicOptions: topics, themes };
+  await loadApplicationsBadge();
+}
+
+async function reloadData() {
+  const [sessions, speakers, topics, themes] = await Promise.all([
+    DB.getSessions(), DB.getSpeakers(), DB.getTopics(), DB.getThemes()
+  ]);
+  DATA.sessions     = sessions;
+  DATA.speakers     = speakers;
+  DATA.topicOptions = topics;
+  DATA.themes       = themes;
 }
 
 // ─── Navigation ──────────────────────────────────────────────────
@@ -520,19 +621,21 @@ function nav(page, btn) {
     });
   }
   if (page === 'dashboard')    renderDashboard();
-  if (page === 'sessions')     renderSessionsTable();
-  if (page === 'speakers')     renderSpeakersTable();
-  if (page === 'topics')       renderTopicsTable();
+  if (page === 'sessions')     { reloadData().then(renderSessionsTable); }
+  if (page === 'speakers')     { reloadData().then(renderSpeakersTable); }
+  if (page === 'topics')       { reloadData().then(renderTopicsTable); }
+  if (page === 'themes')       { reloadData().then(renderThemesTable); }
   if (page === 'applications') renderApplications('all');
   if (page === 'settings')     fillSettings();
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────
-function renderDashboard() {
+async function renderDashboard() {
   document.getElementById('d-sessions').textContent = DATA.sessions.length;
   document.getElementById('d-speakers').textContent = DATA.speakers.length;
   document.getElementById('d-topics').textContent   = DATA.topicOptions.length;
-  document.getElementById('d-regs').textContent     = Object.keys(registrations).length;
+  const regs = await DB.getRegistrations().catch(() => []);
+  document.getElementById('d-regs').textContent     = regs.length;
 
   const upcoming = DATA.sessions.filter(s => s.status === 'upcoming');
   document.getElementById('upcomingList').innerHTML = upcoming.length
@@ -598,13 +701,29 @@ function openSessionModal(id) {
     `<option value="${sp.id}" ${(s?.speakerIds||[]).includes(sp.id) ? 'selected' : ''}>${sp.name}</option>`
   ).join('');
 
+  // populate theme multi-select
+  const tsel = document.getElementById('s-themes');
+  tsel.innerHTML = DATA.themes.map(th =>
+    `<option value="${th.id}" ${(s?.themeIds||[]).includes(th.id) ? 'selected' : ''}>${th.icon} ${th.name}</option>`
+  ).join('');
+
+  // pricing fields
+  document.getElementById('s-ispaid').checked  = s?.isPaid || false;
+  document.getElementById('s-price').value     = s?.price || 0;
+  document.getElementById('s-currency').value  = s?.currency || 'USD';
+  document.getElementById('s-price-row').style.display = (s?.isPaid) ? '' : 'none';
+
   openModal('sessionModal');
 }
 
-function saveSession() {
+async function saveSession() {
   const id = document.getElementById('editSessionId').value;
   const selEl = document.getElementById('s-speakers');
   const speakerIds = Array.from(selEl.selectedOptions).map(o => o.value);
+  const tselEl = document.getElementById('s-themes');
+  const themeIds = Array.from(tselEl.selectedOptions).map(o => o.value);
+  const existing = id ? DATA.sessions.find(s => s.id === id) : null;
+  const isPaid = document.getElementById('s-ispaid').checked;
   const obj = {
     id: id || 'ses-' + Date.now(),
     title: document.getElementById('s-title').value.trim(),
@@ -618,15 +737,18 @@ function saveSession() {
     meetingPlatform: document.getElementById('s-platform').value,
     meetingUrl: document.getElementById('s-url').value.trim(),
     recordingUrl: document.getElementById('s-rec').value.trim(),
-    speakerIds,
+    speakerIds, themeIds, registered: existing?.registered || 0,
     tags: document.getElementById('s-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-    registered: 0
+    isPaid,
+    price:    isPaid ? parseFloat(document.getElementById('s-price').value) || 0 : 0,
+    currency: document.getElementById('s-currency').value || 'USD'
   };
   if (!obj.title) { showToast('Title is required.'); return; }
-  upsert('sessions', obj);
-  closeModal('sessionModal');
-  renderSessionsTable();
-  showToast(id ? 'Session updated.' : 'Session created.');
+  try {
+    await DB.upsertSession(obj);
+    await reloadData(); closeModal('sessionModal'); renderSessionsTable();
+    showToast(id ? 'Session updated.' : 'Session created.');
+  } catch(e) { showToast('Save failed: ' + e.message); }
 }
 
 // ─── Speakers CRUD ───────────────────────────────────────────────
@@ -660,15 +782,14 @@ function openSpeakerModal(id) {
   openModal('speakerModal');
 }
 
-function saveSpeaker() {
+async function saveSpeaker() {
   const id   = document.getElementById('editSpeakerId').value;
   const name = document.getElementById('sp-name').value.trim();
   if (!name) { showToast('Name is required.'); return; }
   const avatar = document.getElementById('sp-avatar').value.trim()
     || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&size=128`;
   const obj = {
-    id: id || 'spk-' + Date.now(),
-    name,
+    id: id || 'spk-' + Date.now(), name,
     title:    document.getElementById('sp-title').value.trim(),
     bio:      document.getElementById('sp-bio').value.trim(),
     avatar,
@@ -676,10 +797,11 @@ function saveSpeaker() {
     twitter:  document.getElementById('sp-twitter').value.trim(),
     topics:   document.getElementById('sp-topics').value.split(',').map(t=>t.trim()).filter(Boolean)
   };
-  upsert('speakers', obj);
-  closeModal('speakerModal');
-  renderSpeakersTable();
-  showToast(id ? 'Speaker updated.' : 'Speaker added.');
+  try {
+    await DB.upsertSpeaker(obj);
+    await reloadData(); closeModal('speakerModal'); renderSpeakersTable();
+    showToast(id ? 'Speaker updated.' : 'Speaker added.');
+  } catch(e) { showToast('Save failed: ' + e.message); }
 }
 
 // ─── Topics CRUD ──────────────────────────────────────────────────
@@ -705,23 +827,78 @@ function openTopicModal(id) {
   document.getElementById('t-desc').value   = t?.description || '';
   document.getElementById('t-votes').value  = t?.votes || 0;
   document.getElementById('t-tags').value   = (t?.tags||[]).join(', ');
+  const thSel = document.getElementById('t-theme');
+  thSel.innerHTML = '<option value="">— No theme —</option>' +
+    DATA.themes.map(th => `<option value="${th.id}" ${t?.themeId === th.id ? 'selected' : ''}>${th.icon} ${th.name}</option>`).join('');
   openModal('topicModal');
 }
 
-function saveTopic() {
+async function saveTopic() {
   const id = document.getElementById('editTopicId').value;
   const obj = {
     id: id || 'top-' + Date.now(),
     title:       document.getElementById('t-title').value.trim(),
     description: document.getElementById('t-desc').value.trim(),
-    votes:       parseInt(document.getElementById('t-votes').value) || 0,
-    tags:        document.getElementById('t-tags').value.split(',').map(t=>t.trim()).filter(Boolean)
+    tags:        document.getElementById('t-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    themeId:     document.getElementById('t-theme').value || null
   };
   if (!obj.title) { showToast('Title is required.'); return; }
-  upsert('topicOptions', obj);
-  closeModal('topicModal');
-  renderTopicsTable();
-  showToast(id ? 'Topic updated.' : 'Topic added.');
+  try {
+    await DB.upsertTopic(obj);
+    await reloadData(); closeModal('topicModal'); renderTopicsTable();
+    showToast(id ? 'Topic updated.' : 'Topic added.');
+  } catch(e) { showToast('Save failed: ' + e.message); }
+}
+
+// ─── Themes CRUD ─────────────────────────────────────────────────
+function renderThemesTable() {
+  document.getElementById('themesTbody').innerHTML = DATA.themes.map(t => `
+    <tr>
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${t.icon}</span>
+          <strong>${t.name}</strong>
+        </span>
+      </td>
+      <td><div class="truncate" title="${t.description}">${t.description}</div></td>
+      <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${t.color};vertical-align:middle"></span> ${t.color}</td>
+      <td>${t.sortOrder}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-xs" onclick="openThemeModal('${t.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" style="margin-left:6px" onclick="deleteItem('themes','${t.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openThemeModal(id) {
+  const t = id ? DATA.themes.find(x => x.id === id) : null;
+  document.getElementById('themeModalTitle').textContent = t ? 'Edit Theme' : 'New Theme';
+  document.getElementById('editThemeId').value   = id || '';
+  document.getElementById('th-name').value       = t?.name || '';
+  document.getElementById('th-desc').value       = t?.description || '';
+  document.getElementById('th-color').value      = t?.color || '#6366f1';
+  document.getElementById('th-color-text').value = t?.color || '#6366f1';
+  document.getElementById('th-icon').value       = t?.icon || '🎯';
+  document.getElementById('th-order').value      = t?.sortOrder ?? 0;
+  openModal('themeModal');
+}
+
+async function saveTheme() {
+  const id = document.getElementById('editThemeId').value;
+  const obj = {
+    id:          id || 'thm-' + Date.now(),
+    name:        document.getElementById('th-name').value.trim(),
+    description: document.getElementById('th-desc').value.trim(),
+    color:       document.getElementById('th-color').value || '#6366f1',
+    icon:        document.getElementById('th-icon').value.trim() || '🎯',
+    sortOrder:   parseInt(document.getElementById('th-order').value) || 0
+  };
+  if (!obj.name) { showToast('Theme name is required.'); return; }
+  try {
+    await DB.upsertTheme(obj);
+    await reloadData(); closeModal('themeModal'); renderThemesTable();
+    showToast(id ? 'Theme updated.' : 'Theme created.');
+  } catch(e) { showToast('Save failed: ' + e.message); }
 }
 
 // ─── Settings ────────────────────────────────────────────────────
@@ -731,63 +908,52 @@ function fillSettings() {
   document.getElementById('cfg-email').value   = DATA.platform.contactEmail || '';
 }
 
-function saveSettings() {
-  DATA.platform.name         = document.getElementById('cfg-name').value.trim();
-  DATA.platform.tagline      = document.getElementById('cfg-tagline').value.trim();
-  DATA.platform.contactEmail = document.getElementById('cfg-email').value.trim();
-  const pw = document.getElementById('cfg-password').value;
-  if (pw) DATA.platform.adminPassword = pw;
-  persistData();
-  showToast('Settings saved — re-export data.json to apply.');
+async function saveSettings() {
+  const settings = {
+    name:         document.getElementById('cfg-name').value.trim(),
+    tagline:      document.getElementById('cfg-tagline').value.trim(),
+    contactEmail: document.getElementById('cfg-email').value.trim()
+  };
+  try {
+    await DB.savePlatformSettings(settings);
+    DATA.platform = settings;
+    showToast('Settings saved.');
+  } catch(e) { showToast('Save failed: ' + e.message); }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
-function upsert(collection, obj) {
-  const arr = DATA[collection];
-  const idx = arr.findIndex(x => x.id === obj.id);
-  if (idx >= 0) arr[idx] = obj; else arr.push(obj);
-  persistData();
-}
-
-function deleteItem(collection, id) {
+async function deleteItem(collection, id) {
   if (!confirm('Delete this item? This cannot be undone.')) return;
-  DATA[collection] = DATA[collection].filter(x => x.id !== id);
-  persistData();
-  if (collection === 'sessions')    renderSessionsTable();
-  if (collection === 'speakers')    renderSpeakersTable();
-  if (collection === 'topicOptions') renderTopicsTable();
-  showToast('Deleted.');
+  try {
+    if (collection === 'sessions')     await DB.deleteSession(id);
+    if (collection === 'speakers')     await DB.deleteSpeaker(id);
+    if (collection === 'topicOptions') await DB.deleteTopic(id);
+    if (collection === 'themes')       await DB.deleteTheme(id);
+    await reloadData();
+    if (collection === 'sessions')     renderSessionsTable();
+    if (collection === 'speakers')     renderSpeakersTable();
+    if (collection === 'topicOptions') renderTopicsTable();
+    if (collection === 'themes')       renderThemesTable();
+    showToast('Deleted.');
+  } catch(e) { showToast('Delete failed: ' + e.message); }
 }
 
-function persistData() {
-  // In production: POST to your API. Here we persist in localStorage
-  // and allow export via data.json download.
-  localStorage.setItem('cf_data', JSON.stringify(DATA));
-}
-
-function exportData() {
-  const stored = localStorage.getItem('cf_data');
-  const payload = stored || JSON.stringify(DATA, null, 2);
-  const blob = new Blob([payload], { type: 'application/json' });
-  const a = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(blob), download: 'data.json'
-  });
-  a.click();
-  showToast('data.json exported — replace the file in your deployment.');
-}
-
-function exportCSV() {
-  const rows = [['Session ID', 'Name', 'Email', 'Timestamp']];
-  Object.entries(registrations).forEach(([sid, r]) => {
-    rows.push([sid, r.name || '', r.email || '', new Date(r.ts).toISOString()]);
-  });
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(blob), download: 'registrations.csv'
-  });
-  a.click();
-  showToast('Registrations CSV exported.');
+async function exportCSV() {
+  try {
+    const regs = await DB.getRegistrations();
+    const rows = [['Session','Name','Email','Org','Role','Registered At']];
+    regs.forEach(r => rows.push([
+      r.sessions?.title || r.session_id,
+      r.name, r.email, r.org || '', r.role || '',
+      new Date(r.created_at).toISOString()
+    ]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(blob), download: 'registrations.csv'
+    }).click();
+    showToast('Registrations CSV exported.');
+  } catch(e) { showToast('Export failed: ' + e.message); }
 }
 
 function filterTable(tableId, q) {
@@ -816,12 +982,14 @@ function showToast(msg) {
 let appFilter = 'all';
 let applications = [];
 
-function loadApplications() {
-  applications = JSON.parse(localStorage.getItem('cf_applications') || '[]');
-  const pending = applications.filter(a => a.status === 'pending').length;
-  const badge = document.getElementById('appBadge');
-  if (pending > 0) { badge.style.display = ''; badge.textContent = pending; }
-  else badge.style.display = 'none';
+async function loadApplicationsBadge() {
+  try {
+    applications = await DB.getApplications();
+    const pending = applications.filter(a => a.status === 'pending').length;
+    const badge = document.getElementById('appBadge');
+    if (pending > 0) { badge.style.display = ''; badge.textContent = pending; }
+    else badge.style.display = 'none';
+  } catch(e) {}
 }
 
 function filterApps(filter, btn) {
@@ -833,8 +1001,8 @@ function filterApps(filter, btn) {
   renderApplications(filter);
 }
 
-function renderApplications(filter) {
-  loadApplications();
+async function renderApplications(filter) {
+  await loadApplicationsBadge();
   const list = filter === 'all' ? applications : applications.filter(a => a.status === filter);
   const tbody = document.getElementById('appsTbody');
   const empty = document.getElementById('emptyApps');
@@ -878,31 +1046,30 @@ function renderApplications(filter) {
   }).join('');
 }
 
-function setAppStatus(id, status) {
-  const idx = applications.findIndex(a => a.id === id);
-  if (idx < 0) return;
-  applications[idx].status = status;
-  localStorage.setItem('cf_applications', JSON.stringify(applications));
-  renderApplications(appFilter);
-  showToast(`Application ${status}.`);
-  if (status === 'approved') {
-    const app = applications[idx];
-    if (confirm(`Promote ${app.personal?.name} to the Speakers list?`)) {
-      const sp = {
-        id: 'spk-' + Date.now(),
-        name:     app.personal.name,
-        title:    app.personal.title,
-        bio:      app.personal.bio,
-        avatar:   `https://ui-avatars.com/api/?name=${encodeURIComponent(app.personal.name)}&background=6366f1&color=fff&size=128`,
-        linkedin: app.personal.linkedin || '',
-        twitter:  '',
-        topics:   app.session?.topicAreas || []
-      };
-      DATA.speakers.push(sp);
-      persistData();
-      showToast(`${app.personal.name} added to Speakers.`);
+async function setAppStatus(id, status) {
+  try {
+    await DB.updateApplicationStatus(id, status);
+    showToast(`Application ${status}.`);
+    if (status === 'approved') {
+      const app = applications.find(a => a.id === id);
+      if (app && confirm(`Promote ${app.personal?.name} to the Speakers list?`)) {
+        const sp = {
+          id: 'spk-' + Date.now(),
+          name:     app.personal.name,
+          title:    app.personal.title || '',
+          bio:      app.personal.bio   || '',
+          avatar:   `https://ui-avatars.com/api/?name=${encodeURIComponent(app.personal.name)}&background=6366f1&color=fff&size=128`,
+          linkedin: app.personal.linkedin || '',
+          twitter:  '',
+          topics:   app.session?.topicAreas || []
+        };
+        await DB.upsertSpeaker(sp);
+        await reloadData();
+        showToast(`${app.personal.name} added to Speakers.`);
+      }
     }
-  }
+    await renderApplications(appFilter);
+  } catch(e) { showToast('Update failed: ' + e.message); }
 }
 
 function viewApplication(id) {
@@ -965,8 +1132,8 @@ function viewApplication(id) {
   openModal('detailModal');
 }
 
-function exportApplicationsCSV() {
-  loadApplications();
+async function exportApplicationsCSV() {
+  await loadApplicationsBadge();
   const rows = [['ID','Name','Email','Title','Org','Topics','Durations','Formats','Timezone','Status','Submitted']];
   applications.forEach(a => {
     rows.push([
@@ -982,25 +1149,24 @@ function exportApplicationsCSV() {
   });
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
-  const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'speaker-applications.csv' });
-  link.click();
+  Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'speaker-applications.csv' }).click();
   showToast('Applications CSV exported.');
 }
 
-// Load from localStorage if user has made edits previously
-function maybeRestoreLocalData() {
-  const local = localStorage.getItem('cf_data');
-  if (local) {
-    try { DATA = JSON.parse(local); } catch(e) {}
-  }
-}
-
 async function initAdmin() {
-  try { const r = await fetch('data.json'); DATA = await r.json(); }
-  catch(e) { console.warn('data.json not found'); }
-  maybeRestoreLocalData(); // local edits override file
-  loadApplications();      // show badge immediately
-  if (sessionStorage.getItem('cf_admin') === 'ok') unlock();
+  // Restore session if already authenticated
+  const session = await DB.getSession();
+  if (session) {
+    await loadAdminData();
+    unlock();
+  }
+  // React to sign-out (e.g. token expiry)
+  window._supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      document.getElementById('loginOverlay').style.display = '';
+      document.getElementById('shell').style.display = 'none';
+    }
+  });
 }
 
 initAdmin();

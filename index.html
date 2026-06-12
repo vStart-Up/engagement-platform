@@ -126,6 +126,21 @@
     .tab.active { background: var(--brand); color: #fff; }
     .tab:hover:not(.active) { background: var(--brand-light); color: var(--brand); }
 
+    .theme-filter-row {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; align-items: center;
+    }
+    .theme-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      border: 2px solid transparent; cursor: pointer; transition: all .15s;
+      background: var(--bg); color: var(--muted);
+    }
+    .theme-chip:hover { opacity: .85; }
+    .theme-chip.active { color: #fff; border-color: transparent; }
+    .theme-chip.all-chip { border: 2px solid var(--border); }
+    .theme-chip.all-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .badge-paid { background: #dcfce7; color: #16a34a; font-weight: 700; }
+    .badge-free { background: #f0fdf4; color: #15803d; }
     .sessions-grid { display: grid; gap: 20px; }
     .session-card {
       background: var(--surface); border: 1px solid var(--border);
@@ -271,6 +286,15 @@
       display: flex; align-items: center; gap: 10px;
     }
     .topics-list { display: grid; gap: 14px; }
+    .theme-section { display: grid; gap: 12px; margin-bottom: 8px; }
+    .theme-section-header {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; background: var(--bg);
+      border-radius: var(--radius); margin-bottom: 4px;
+    }
+    .theme-section-icon { font-size: 22px; line-height: 1; padding-top: 2px; }
+    .theme-section-name { font-weight: 700; font-size: 14px; color: var(--fg); }
+    .theme-section-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .topic-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 20px 24px;
@@ -413,6 +437,9 @@
       <button class="tab" onclick="filterSessions('upcoming', this)">Upcoming</button>
       <button class="tab" onclick="filterSessions('completed', this)">Past</button>
     </div>
+    <div class="theme-filter-row" id="themeFilterRow" style="display:none">
+      <!-- injected by renderThemeFilter() -->
+    </div>
     <div class="sessions-grid" id="sessionsGrid">
       <!-- injected by JS -->
     </div>
@@ -531,27 +558,57 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/db.js"></script>
 <script>
 // ─── State ──────────────────────────────────────────────────────
 let DATA = { platform: {}, sessions: [], speakers: [], topicOptions: [] };
-let votes = JSON.parse(localStorage.getItem('cf_votes') || '{}');
-let registrations = JSON.parse(localStorage.getItem('cf_regs') || '{}');
+let votes         = {};   // { topicId: true } — populated from DB via topic.myVote
+let registrations = {};   // { sessionId: true } — kept in localStorage for UX continuity
 let activeSession = null;
 let sessionFilter = 'all';
+let activeTheme   = null; // theme id or null (all)
 
 // ─── Boot ────────────────────────────────────────────────────────
 async function init() {
   try {
-    const r = await fetch('data.json');
-    DATA = await r.json();
+    const [platform, sessions, speakers, topics, themes] = await Promise.all([
+      DB.getPlatformSettings(),
+      DB.getSessions(),
+      DB.getSpeakers(),
+      DB.getTopics(),
+      DB.getThemes()
+    ]);
+    topics.forEach(t => { if (t.myVote) votes[t.id] = true; });
+    DATA = { platform, sessions, speakers, topicOptions: topics, themes };
+    registrations = JSON.parse(localStorage.getItem('cf_regs') || '{}');
   } catch(e) {
-    console.warn('data.json not found, using defaults');
+    console.error('DB load error:', e);
+    showToast('Could not connect to database. Check your Supabase config.');
   }
   applyBranding();
   renderStats();
+  renderThemeFilter();
   renderSessions(sessionFilter);
   renderSpeakers();
   renderTopics();
+  subscribeToVotes();
+}
+
+// Real-time vote count updates
+function subscribeToVotes() {
+  try {
+    window._supabaseClient
+      .channel('public:votes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, async () => {
+        const topics = await DB.getTopics();
+        topics.forEach(t => { if (t.myVote) votes[t.id] = true; else delete votes[t.id]; });
+        DATA.topicOptions = topics;
+        renderTopics();
+      })
+      .subscribe();
+  } catch(e) { /* real-time optional */ }
 }
 
 // ─── Branding ────────────────────────────────────────────────────
@@ -584,6 +641,32 @@ function showSection(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ─── Theme Filter ─────────────────────────────────────────────────
+function renderThemeFilter() {
+  const row = document.getElementById('themeFilterRow');
+  const themes = DATA.themes || [];
+  if (!themes.length) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  row.innerHTML = `
+    <button class="theme-chip all-chip ${!activeTheme ? 'active' : ''}"
+      onclick="setThemeFilter(null, this)">All Themes</button>
+    ${themes.map(th => `
+      <button class="theme-chip ${activeTheme === th.id ? 'active' : ''}"
+        style="background:${activeTheme === th.id ? th.color : 'var(--bg)'};
+               color:${activeTheme === th.id ? '#fff' : 'var(--muted)'};
+               border-color:${th.color}40;"
+        onclick="setThemeFilter('${th.id}', this)"
+        data-theme-id="${th.id}" data-theme-color="${th.color}">
+        ${th.icon} ${th.name}
+      </button>`).join('')}`;
+}
+
+function setThemeFilter(themeId, btn) {
+  activeTheme = themeId;
+  renderThemeFilter();
+  renderSessions(sessionFilter);
+}
+
 // ─── Sessions ────────────────────────────────────────────────────
 function filterSessions(filter, btn) {
   sessionFilter = filter;
@@ -594,8 +677,11 @@ function filterSessions(filter, btn) {
 
 function renderSessions(filter) {
   const grid = document.getElementById('sessionsGrid');
-  const list = filter === 'all' ? DATA.sessions :
-               DATA.sessions.filter(s => s.status === filter);
+  let list = filter === 'all' ? DATA.sessions :
+             DATA.sessions.filter(s => s.status === filter);
+  if (activeTheme) {
+    list = list.filter(s => (s.themeIds || []).includes(activeTheme));
+  }
   if (!list.length) {
     grid.innerHTML = '<p style="color:var(--muted); font-size:14px;">No sessions found.</p>';
     return;
@@ -639,13 +725,24 @@ function sessionCard(s) {
   const tags = (s.tags || []).map(t => `<span class="badge badge-tag">${t}</span>`).join('');
   const dateStr = formatDate(s.date, s.time, s.timezone);
 
+  const themeBadges = (s.themeIds || []).map(tid => {
+    const th = (DATA.themes || []).find(t => t.id === tid);
+    return th ? `<span class="badge" style="background:${th.color}18;color:${th.color};border:1px solid ${th.color}30">${th.icon} ${th.name}</span>` : '';
+  }).join('');
+
+  const priceBadge = s.isPaid
+    ? `<span class="badge badge-paid">💳 ${s.currency || 'USD'} ${(s.price || 0).toFixed(2)}</span>`
+    : `<span class="badge badge-free">✓ Free</span>`;
+
   return `
   <div class="session-card ${s.status === 'completed' ? 'completed' : ''}">
     <div class="session-body">
       <div class="session-meta">
         ${statusBadge}
         ${platformBadge}
+        ${priceBadge}
         ${tags}
+        ${themeBadges}
       </div>
       <div class="session-title">${s.title}</div>
       <div class="session-desc">${s.description}</div>
@@ -717,19 +814,59 @@ function speakerCard(sp) {
 // ─── Topic Voting ─────────────────────────────────────────────────
 function renderTopics() {
   const list = document.getElementById('topicsList');
+  const themes = DATA.themes || [];
   const totalVotes = DATA.topicOptions.reduce((a, t) => a + getTotalVotes(t), 0);
-  list.innerHTML = [...DATA.topicOptions]
-    .sort((a, b) => getTotalVotes(b) - getTotalVotes(a))
-    .map(t => topicCard(t, totalVotes))
-    .join('');
+
+  if (!themes.length) {
+    // No themes — flat sorted list
+    list.innerHTML = [...DATA.topicOptions]
+      .sort((a, b) => getTotalVotes(b) - getTotalVotes(a))
+      .map(t => topicCard(t, totalVotes)).join('');
+    return;
+  }
+
+  // Group by theme, then unthemed bucket
+  const sections = [];
+  themes.forEach(th => {
+    const grouped = DATA.topicOptions.filter(t => t.themeId === th.id)
+      .sort((a, b) => getTotalVotes(b) - getTotalVotes(a));
+    if (grouped.length) {
+      sections.push(`
+        <div class="theme-section">
+          <div class="theme-section-header" style="border-left:4px solid ${th.color}">
+            <span class="theme-section-icon">${th.icon}</span>
+            <div>
+              <div class="theme-section-name">${th.name}</div>
+              <div class="theme-section-desc">${th.description}</div>
+            </div>
+          </div>
+          ${grouped.map(t => topicCard(t, totalVotes)).join('')}
+        </div>`);
+    }
+  });
+
+  const unthemed = DATA.topicOptions.filter(t => !t.themeId)
+    .sort((a, b) => getTotalVotes(b) - getTotalVotes(a));
+  if (unthemed.length) {
+    sections.push(`
+      <div class="theme-section">
+        <div class="theme-section-header" style="border-left:4px solid var(--muted)">
+          <span class="theme-section-icon">💡</span>
+          <div><div class="theme-section-name">Other Topics</div></div>
+        </div>
+        ${unthemed.map(t => topicCard(t, totalVotes)).join('')}
+      </div>`);
+  }
+
+  list.innerHTML = sections.join('');
 }
 
 function getTotalVotes(t) {
-  return (t.votes || 0) + (votes[t.id] ? 1 : 0);
+  return t.votes || 0;  // vote count comes from DB (includes current voter)
 }
 
 function topicCard(t, totalVotes) {
-  const myVote = !!votes[t.id];
+  const myVote = !!t.myVote;            // set by DB.getTopics() per voter
   const count  = getTotalVotes(t);
   const pct    = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
   const tags   = (t.tags || []).map(tg => `<span class="badge badge-tag">${tg}</span>`).join('');
@@ -753,16 +890,24 @@ function topicCard(t, totalVotes) {
   </div>`;
 }
 
-function castVote(topicId) {
-  if (votes[topicId]) {
-    delete votes[topicId];
-    showToast('Vote removed.');
-  } else {
-    votes[topicId] = true;
-    showToast('Vote cast! Thanks for your input 🎉');
+async function castVote(topicId) {
+  try {
+    if (votes[topicId]) {
+      await DB.removeVote(topicId);
+      delete votes[topicId];
+      showToast('Vote removed.');
+    } else {
+      await DB.castVote(topicId);
+      votes[topicId] = true;
+      showToast('Vote cast! Thanks for your input 🎉');
+    }
+    const topics = await DB.getTopics();
+    topics.forEach(t => { if (t.myVote) votes[t.id] = true; else delete votes[t.id]; });
+    DATA.topicOptions = topics;
+    renderTopics();
+  } catch(e) {
+    showToast('Could not save vote. Please try again.');
   }
-  localStorage.setItem('cf_votes', JSON.stringify(votes));
-  renderTopics();
 }
 
 // ─── Registration ─────────────────────────────────────────────────
@@ -780,21 +925,34 @@ function closeModal(e) {
   if (e.target.id === 'regModal') document.getElementById('regModal').classList.remove('open');
 }
 
-function submitReg() {
+async function submitReg() {
   const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
+  const org   = document.getElementById('regOrg').value.trim();
+  const role  = document.getElementById('regRole').value;
   if (!name || !email) { showToast('Please fill in your name and email.'); return; }
   if (!email.includes('@')) { showToast('Please enter a valid email address.'); return; }
 
-  registrations[activeSession.id] = { name, email, ts: Date.now() };
-  localStorage.setItem('cf_regs', JSON.stringify(registrations));
+  const btn = document.querySelector('#regModal .btn-brand');
+  btn.textContent = 'Registering…'; btn.disabled = true;
+  try {
+    await DB.registerForSession(activeSession.id, { name, email, org, role });
+    registrations[activeSession.id] = { name, email, ts: Date.now() };
+    localStorage.setItem('cf_regs', JSON.stringify(registrations));
 
-  document.getElementById('regSuccessDetail').textContent =
-    `We've saved your spot for "${activeSession.title}". A calendar invite and meeting link will be sent to ${email}.`;
+    document.getElementById('regSuccessDetail').textContent =
+      `You're registered for "${activeSession.title}". Details will be sent to ${email}.`;
+    document.getElementById('regForm').style.display = 'none';
+    document.getElementById('regSuccess').style.display = '';
 
-  document.getElementById('regForm').style.display = 'none';
-  document.getElementById('regSuccess').style.display = '';
-  renderSessions(sessionFilter);
+    // Refresh session list to show updated registration count
+    DATA.sessions = await DB.getSessions();
+    renderSessions(sessionFilter);
+  } catch(e) {
+    showToast('Registration failed. Please try again.');
+  } finally {
+    btn.textContent = 'Confirm Registration'; btn.disabled = false;
+  }
 }
 
 function addToCalendar() {

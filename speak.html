@@ -344,6 +344,14 @@
           </div>
         </div>
 
+        <div class="form-row" style="margin-top:16px" id="themeChipsRow">
+          <label>Session Themes <span style="font-weight:400;color:var(--muted)">— select all you're comfortable with</span></label>
+          <div class="chip-group" id="themeChips">
+            <!-- injected by loadThemeChips() -->
+            <span style="font-size:13px;color:var(--muted)">Loading themes…</span>
+          </div>
+        </div>
+
         <div class="form-row" style="margin-top:16px">
           <label>Session Format Preferences</label>
           <div class="chip-group" id="formatChips">
@@ -518,6 +526,9 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/db.js"></script>
 <script>
 // ─── Multi-select chip helpers ────────────────────────────────────
 function bindChips(containerId) {
@@ -545,6 +556,26 @@ bindChips('formatChips');
 bindChips('timeChips');
 bindDurCards();
 bindDayChips();
+
+// ─── Load themes from DB ──────────────────────────────────────────
+async function loadThemeChips() {
+  try {
+    const themes = await DB.getThemes();
+    const container = document.getElementById('themeChips');
+    if (!themes.length) {
+      document.getElementById('themeChipsRow').style.display = 'none';
+      return;
+    }
+    container.innerHTML = themes.map(th =>
+      `<div class="chip" data-val="${th.id}" style="--chip-color:${th.color}"
+        data-label="${th.name}">${th.icon} ${th.name}</div>`
+    ).join('');
+    bindChips('themeChips');
+  } catch(e) {
+    document.getElementById('themeChipsRow').style.display = 'none';
+  }
+}
+loadThemeChips();
 
 // ─── Progress tracking ────────────────────────────────────────────
 const FIELDS = ['f-name','f-title','f-email','f-org','f-bio','f-topicProposal','f-timezone'];
@@ -604,9 +635,12 @@ function validate() {
 }
 
 // ─── Submit ───────────────────────────────────────────────────────
-document.getElementById('applicationForm').addEventListener('submit', e => {
+document.getElementById('applicationForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!validate()) return;
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.textContent = 'Submitting…'; submitBtn.disabled = true;
 
   const submission = {
     id: 'app-' + Date.now(),
@@ -623,6 +657,7 @@ document.getElementById('applicationForm').addEventListener('submit', e => {
     },
     session: {
       topicAreas:    getSelected('topicChips'),
+      themeIds:      getSelected('themeChips'),
       topicProposal: document.getElementById('f-topicProposal').value.trim(),
       formats:       getSelected('formatChips'),
       durations:     getSelected('durGrid').map(Number),
@@ -642,16 +677,16 @@ document.getElementById('applicationForm').addEventListener('submit', e => {
     }
   };
 
-  // Persist to localStorage (admin panel reads from here)
-  const existing = JSON.parse(localStorage.getItem('cf_applications') || '[]');
-  existing.push(submission);
-  localStorage.setItem('cf_applications', JSON.stringify(existing));
-
-  // Show success
-  document.getElementById('applicationForm').style.display = 'none';
-  document.getElementById('successScreen').style.display = '';
-  document.getElementById('progressFill').style.width = '100%';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  try {
+    await DB.submitApplication(submission);
+    document.getElementById('applicationForm').style.display = 'none';
+    document.getElementById('successScreen').style.display = '';
+    document.getElementById('progressFill').style.width = '100%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(err) {
+    showToast('Submission failed. Please try again.');
+    submitBtn.textContent = 'Submit Application →'; submitBtn.disabled = false;
+  }
 });
 
 // ─── Toast ────────────────────────────────────────────────────────
