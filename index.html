@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courseific Sessions</title>
+  <style>
+    /* ─── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --brand:       #6366f1;
+      --brand-dark:  #4f46e5;
+      --brand-light: #e0e7ff;
+      --surface:     #ffffff;
+      --bg:          #f8f9fc;
+      --border:      #e5e7eb;
+      --text:        #111827;
+      --muted:       #6b7280;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --zoom:        #2d8cff;
+      --teams:       #5558af;
+      --meet:        #34a853;
+      --radius:      12px;
+      --shadow:      0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    /* ─── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ─── Layout ────────────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── Header ────────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-weight: 700; font-size: 18px; color: var(--brand);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      color: var(--muted); transition: all .15s; border: none; background: none;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--brand); background: var(--brand-light);
+    }
+
+    /* ─── Hero ──────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, #8b5cf6 100%);
+      color: #fff; padding: 72px 24px;
+      text-align: center;
+    }
+    .hero-tag {
+      display: inline-block; background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
+      padding: 4px 14px; border-radius: 20px; font-size: 13px;
+      font-weight: 500; margin-bottom: 20px; letter-spacing: .4px;
+    }
+    .hero h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+    .hero p { font-size: 17px; opacity: .85; max-width: 560px; margin: 0 auto 32px; }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 11px 22px; border-radius: 9px; font-size: 14px;
+      font-weight: 600; border: none; transition: all .15s;
+    }
+    .btn-white { background: #fff; color: var(--brand); }
+    .btn-white:hover { background: #f0f0ff; transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.5); }
+    .btn-outline:hover { background: rgba(255,255,255,.1); }
+    .btn-brand { background: var(--brand); color: #fff; }
+    .btn-brand:hover { background: var(--brand-dark); transform: translateY(-1px); }
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+
+    /* ─── Stats bar ─────────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0; text-align: center;
+    }
+    .stat { padding: 0 16px; }
+    .stat + .stat { border-left: 1px solid var(--border); }
+    .stat-value { font-size: 28px; font-weight: 800; color: var(--brand); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+
+    /* ─── Sections ──────────────────────────────────────────────── */
+    .section { padding: 64px 0; }
+    .section-header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 36px; flex-wrap: wrap; gap: 12px;
+    }
+    .section-title { font-size: 24px; font-weight: 700; }
+    .section-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .view-tag { display: none; } /* tabs */
+
+    /* ─── Sessions ──────────────────────────────────────────────── */
+    .tab-row { display: flex; gap: 6px; margin-bottom: 28px; }
+    .tab {
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      border: none; background: var(--bg); color: var(--muted); transition: all .15s;
+    }
+    .tab.active { background: var(--brand); color: #fff; }
+    .tab:hover:not(.active) { background: var(--brand-light); color: var(--brand); }
+
+    .sessions-grid { display: grid; gap: 20px; }
+    .session-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 20px; align-items: start;
+      box-shadow: var(--shadow); transition: box-shadow .15s;
+    }
+    .session-card:hover { box-shadow: 0 4px 24px rgba(99,102,241,.12); }
+    .session-card.completed { opacity: .75; }
+
+    .session-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      letter-spacing: .4px; text-transform: uppercase;
+    }
+    .badge-upcoming { background: #dcfce7; color: #166534; }
+    .badge-live     { background: #fef2f2; color: #991b1b; }
+    .badge-completed{ background: var(--border); color: var(--muted); }
+    .badge-tag      { background: var(--brand-light); color: var(--brand); }
+
+    .platform-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .platform-zoom  { background: #dbeafe; color: var(--zoom); }
+    .platform-teams { background: #ede9fe; color: var(--teams); }
+    .platform-meet  { background: #dcfce7; color: var(--meet); }
+
+    .session-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .session-desc  { color: var(--muted); font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
+
+    .session-datetime {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--muted); margin-bottom: 12px;
+    }
+
+    .session-speakers { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .speaker-avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--surface); margin-left: -8px; object-fit: cover;
+    }
+    .speaker-avatar-sm:first-child { margin-left: 0; }
+    .speaker-names { font-size: 13px; color: var(--muted); }
+
+    .session-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .session-aside {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+      min-width: 140px;
+    }
+    .capacity-bar {
+      width: 140px;
+    }
+    .capacity-label {
+      display: flex; justify-content: space-between; font-size: 11px;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .capacity-track {
+      height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+    }
+    .capacity-fill {
+      height: 100%; background: var(--brand); border-radius: 3px;
+      transition: width .4s;
+    }
+
+    /* ─── Registration modal ────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.45); backdrop-filter: blur(2px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius);
+      width: 100%; max-width: 480px; margin: 20px;
+      padding: 36px; box-shadow: 0 24px 64px rgba(0,0,0,.15);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; font-size: 20px; color: var(--muted);
+      line-height: 1;
+    }
+    .modal h2 { font-size: 20px; margin-bottom: 6px; }
+    .modal p.subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .form-row input, .form-row select {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; font-family: inherit;
+      transition: border-color .15s;
+    }
+    .form-row input:focus, .form-row select:focus {
+      outline: none; border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+    .btn-full { flex: 1; justify-content: center; }
+    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .success-msg {
+      text-align: center; padding: 16px 0;
+      display: none;
+    }
+    .success-icon { font-size: 48px; margin-bottom: 12px; }
+    .success-msg h3 { font-size: 18px; margin-bottom: 8px; }
+    .success-msg p { color: var(--muted); font-size: 14px; }
+
+    /* ─── Speakers ──────────────────────────────────────────────── */
+    .speakers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .speaker-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      box-shadow: var(--shadow); transition: box-shadow .15s;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .speaker-card:hover { box-shadow: 0 4px 24px rgba(99,102,241,.12); }
+    .speaker-header { display: flex; align-items: center; gap: 16px; }
+    .speaker-avatar {
+      width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--brand-light);
+    }
+    .speaker-name { font-size: 17px; font-weight: 700; }
+    .speaker-title { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .speaker-bio { font-size: 14px; color: var(--muted); line-height: 1.55; }
+    .speaker-topics { display: flex; flex-wrap: wrap; gap: 6px; }
+    .speaker-links { display: flex; gap: 8px; }
+    .icon-link {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--muted); padding: 5px 10px;
+      border: 1px solid var(--border); border-radius: 6px;
+      transition: all .15s;
+    }
+    .icon-link:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* ─── Voting ────────────────────────────────────────────────── */
+    .voting-note {
+      background: var(--brand-light); border: 1px solid var(--brand);
+      border-radius: 10px; padding: 14px 18px; font-size: 13px;
+      color: var(--brand-dark); margin-bottom: 24px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .topics-list { display: grid; gap: 14px; }
+    .topic-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      display: flex; align-items: center; gap: 20px;
+      box-shadow: var(--shadow); transition: all .15s;
+    }
+    .topic-card:hover { border-color: var(--brand); box-shadow: 0 4px 24px rgba(99,102,241,.1); }
+    .topic-card.voted { border-color: var(--brand); background: #fafafe; }
+    .vote-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; min-width: 56px;
+      font-size: 18px; font-weight: 800; color: var(--muted);
+      transition: all .15s; flex-shrink: 0;
+    }
+    .vote-btn .vote-label { font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+    .vote-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+    .topic-card.voted .vote-btn {
+      border-color: var(--brand); background: var(--brand); color: #fff;
+    }
+    .topic-body { flex: 1; }
+    .topic-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .topic-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .topic-tags  { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .vote-bar-wrap { width: 120px; flex-shrink: 0; text-align: right; }
+    .vote-pct { font-size: 22px; font-weight: 800; color: var(--brand); }
+    .vote-pct-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .mini-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .mini-bar-fill { height: 100%; background: var(--brand); border-radius: 3px; }
+
+    /* ─── Toast ─────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 300;
+      background: var(--text); color: #fff; padding: 12px 20px;
+      border-radius: 10px; font-size: 14px; font-weight: 500;
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s; pointer-events: none; max-width: 320px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── Footer ────────────────────────────────────────────────── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,.6);
+      padding: 40px 0; margin-top: 40px;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-brand { font-weight: 700; color: #fff; font-size: 16px; }
+    .footer-links { display: flex; gap: 20px; font-size: 13px; }
+    .footer-links a:hover { color: #fff; }
+
+    /* ─── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat + .stat:nth-child(3) { border-left: none; }
+      .session-card { grid-template-columns: 1fr; }
+      .session-aside { align-items: flex-start; }
+      .capacity-bar { width: 100%; }
+      .nav-links .nav-link:not(.active) { display: none; }
+      .topic-card { flex-wrap: wrap; }
+      .vote-bar-wrap { width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────────────────── -->
+<header>
+  <div class="container">
+    <nav class="nav">
+      <div class="nav-logo">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="8" fill="#6366f1"/>
+          <path d="M8 20 L14 8 L20 20" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10.5 15.5 H17.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span id="platformName">Courseific Sessions</span>
+      </div>
+      <div class="nav-links">
+        <button class="nav-link active" onclick="showSection('sessions')">Sessions</button>
+        <button class="nav-link" onclick="showSection('speakers')">Speakers</button>
+        <button class="nav-link" onclick="showSection('vote')">Vote</button>
+        <a href="speak.html" class="nav-link" style="color:var(--brand);background:var(--brand-light);font-weight:700">🎙 Speak</a>
+        <a href="admin.html" class="nav-link" style="color:var(--muted)">Admin</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ── HERO ────────────────────────────────────────────────────── -->
+<section class="hero" id="heroSection">
+  <div class="hero-tag">🌐 Global Community Sessions</div>
+  <h1 id="heroTitle">Community-driven<br>Learning, Globally Connected</h1>
+  <p id="heroTagline">Join expert-led sessions, vote for the topics that matter to you, and connect with practitioners worldwide.</p>
+  <div class="hero-actions">
+    <button class="btn btn-white" onclick="showSection('sessions')">Browse Sessions</button>
+    <button class="btn btn-outline" onclick="showSection('vote')">Vote on Topics →</button>
+  </div>
+</section>
+
+<!-- ── STATS ───────────────────────────────────────────────────── -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-value" id="statSessions">—</div>
+        <div class="stat-label">SESSIONS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statSpeakers">—</div>
+        <div class="stat-label">SPEAKERS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statTopics">—</div>
+        <div class="stat-label">OPEN TOPICS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statRegistered">—</div>
+        <div class="stat-label">REGISTRATIONS</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SESSIONS ────────────────────────────────────────────────── -->
+<main class="container">
+
+  <!-- Sessions Section -->
+  <section class="section" id="sect-sessions">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Sessions</div>
+        <div class="section-sub">Upcoming and past expert-led community sessions</div>
+      </div>
+    </div>
+    <div class="tab-row">
+      <button class="tab active" onclick="filterSessions('all', this)">All</button>
+      <button class="tab" onclick="filterSessions('upcoming', this)">Upcoming</button>
+      <button class="tab" onclick="filterSessions('completed', this)">Past</button>
+    </div>
+    <div class="sessions-grid" id="sessionsGrid">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+  <!-- Speakers Section -->
+  <section class="section" id="sect-speakers" style="display:none">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Speakers</div>
+        <div class="section-sub">Meet the practitioners behind the sessions</div>
+      </div>
+    </div>
+    <div class="speakers-grid" id="speakersGrid">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+  <!-- Vote Section -->
+  <section class="section" id="sect-vote" style="display:none">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Vote on Upcoming Topics</div>
+        <div class="section-sub">Tell us what you want to hear next — most voted topics get scheduled</div>
+      </div>
+    </div>
+    <div class="voting-note">
+      <span>💡</span>
+      <span>Each community member gets one vote per topic. Voting is anonymous and results update in real-time.</span>
+    </div>
+    <div class="topics-list" id="topicsList">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+</main>
+
+<!-- ── REGISTRATION MODAL ──────────────────────────────────────── -->
+<div class="modal-overlay" id="regModal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('regModal').classList.remove('open')">✕</button>
+    <div id="regForm">
+      <h2 id="modalTitle">Register for Session</h2>
+      <p class="subtitle" id="modalSubtitle">Secure your spot — you'll receive calendar invite and meeting link.</p>
+      <div class="form-row">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Jane Smith" />
+      </div>
+      <div class="form-row">
+        <label>Work Email</label>
+        <input type="email" id="regEmail" placeholder="jane@company.com" />
+      </div>
+      <div class="form-row">
+        <label>Organisation</label>
+        <input type="text" id="regOrg" placeholder="Acme Corp" />
+      </div>
+      <div class="form-row">
+        <label>Role</label>
+        <select id="regRole">
+          <option value="">Select your role…</option>
+          <option>Engineering Leader / CTO</option>
+          <option>Principal / Staff Engineer</option>
+          <option>Engineering Manager</option>
+          <option>Product / Strategy</option>
+          <option>Architect</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-full btn-sm" onclick="document.getElementById('regModal').classList.remove('open')">Cancel</button>
+        <button class="btn btn-brand btn-full btn-sm" onclick="submitReg()">Confirm Registration</button>
+      </div>
+    </div>
+    <div class="success-msg" id="regSuccess">
+      <div class="success-icon">🎉</div>
+      <h3>You're registered!</h3>
+      <p id="regSuccessDetail">We've saved your spot. A calendar invite and meeting link will be sent to your email.</p>
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+        <button class="btn btn-brand btn-sm" id="addCalBtn" onclick="addToCalendar()">+ Add to Calendar</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('regModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ───────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── SPEAK CTA ────────────────────────────────────────────────── -->
+<section style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);padding:64px 24px;text-align:center;color:#fff">
+  <div style="max-width:600px;margin:0 auto">
+    <div style="font-size:40px;margin-bottom:16px">🎙️</div>
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:12px">Are you an expert?</h2>
+    <p style="font-size:16px;opacity:.85;margin-bottom:28px">Share your knowledge with a global community of engineers, architects, and technology leaders. Tell us your topics — we handle the rest.</p>
+    <a href="speak.html" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#4f46e5;padding:13px 28px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none">
+      Apply to Speak →
+    </a>
+  </div>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand" id="footerBrand">Courseific Sessions</div>
+        <div style="font-size:12px; margin-top:4px;" id="footerContact">contact@courseific.com</div>
+      </div>
+      <div class="footer-links">
+        <a href="#" onclick="showSection('sessions')">Sessions</a>
+        <a href="#" onclick="showSection('speakers')">Speakers</a>
+        <a href="#" onclick="showSection('vote')">Vote</a>
+        <a href="admin.html">Admin</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────
+let DATA = { platform: {}, sessions: [], speakers: [], topicOptions: [] };
+let votes = JSON.parse(localStorage.getItem('cf_votes') || '{}');
+let registrations = JSON.parse(localStorage.getItem('cf_regs') || '{}');
+let activeSession = null;
+let sessionFilter = 'all';
+
+// ─── Boot ────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const r = await fetch('data.json');
+    DATA = await r.json();
+  } catch(e) {
+    console.warn('data.json not found, using defaults');
+  }
+  applyBranding();
+  renderStats();
+  renderSessions(sessionFilter);
+  renderSpeakers();
+  renderTopics();
+}
+
+// ─── Branding ────────────────────────────────────────────────────
+function applyBranding() {
+  const { name, tagline, contactEmail } = DATA.platform;
+  document.title = name || 'Community Sessions';
+  document.getElementById('platformName').textContent = name || 'Sessions';
+  document.getElementById('heroTitle').innerHTML = name ? `${name}<br>Sessions` : 'Community-driven<br>Learning';
+  document.getElementById('heroTagline').textContent = tagline || '';
+  document.getElementById('footerBrand').textContent = name || 'Sessions';
+  document.getElementById('footerContact').textContent = contactEmail || '';
+}
+
+// ─── Stats ───────────────────────────────────────────────────────
+function renderStats() {
+  document.getElementById('statSessions').textContent = DATA.sessions.length;
+  document.getElementById('statSpeakers').textContent = DATA.speakers.length;
+  document.getElementById('statTopics').textContent   = DATA.topicOptions.length;
+  const totalReg = DATA.sessions.reduce((a, s) => a + (s.registered || 0), 0);
+  document.getElementById('statRegistered').textContent = totalReg + '+';
+}
+
+// ─── Navigation ──────────────────────────────────────────────────
+function showSection(id) {
+  ['sessions','speakers','vote'].forEach(s => {
+    document.getElementById('sect-' + s).style.display = s === id ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Sessions ────────────────────────────────────────────────────
+function filterSessions(filter, btn) {
+  sessionFilter = filter;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderSessions(filter);
+}
+
+function renderSessions(filter) {
+  const grid = document.getElementById('sessionsGrid');
+  const list = filter === 'all' ? DATA.sessions :
+               DATA.sessions.filter(s => s.status === filter);
+  if (!list.length) {
+    grid.innerHTML = '<p style="color:var(--muted); font-size:14px;">No sessions found.</p>';
+    return;
+  }
+  grid.innerHTML = list.map(s => sessionCard(s)).join('');
+}
+
+function sessionCard(s) {
+  const speakers = (s.speakerIds || []).map(id => DATA.speakers.find(sp => sp.id === id)).filter(Boolean);
+  const statusBadge = {
+    upcoming:  '<span class="badge badge-upcoming">● Upcoming</span>',
+    live:      '<span class="badge badge-live">● Live Now</span>',
+    completed: '<span class="badge badge-completed">Completed</span>'
+  }[s.status] || '';
+
+  const platformBadge = s.meetingPlatform ? `
+    <span class="platform-pill platform-${s.meetingPlatform}">
+      ${platformIcon(s.meetingPlatform)} ${s.meetingPlatform.charAt(0).toUpperCase() + s.meetingPlatform.slice(1)}
+    </span>` : '';
+
+  const pct = s.capacity ? Math.round((s.registered / s.capacity) * 100) : 0;
+
+  const speakerAvatars = speakers.map(sp =>
+    `<img class="speaker-avatar-sm" src="${sp.avatar}" alt="${sp.name}" title="${sp.name}">`
+  ).join('');
+
+  const speakerNames = speakers.map(sp => sp.name).join(', ');
+
+  const regKey = s.id;
+  const isReg = !!registrations[regKey];
+
+  const actionBtn = s.status === 'completed'
+    ? (s.recordingUrl
+        ? `<a href="${s.recordingUrl}" target="_blank" class="btn btn-secondary btn-sm">▶ Watch Recording</a>`
+        : `<span style="font-size:13px;color:var(--muted)">Recording coming soon</span>`)
+    : isReg
+        ? `<button class="btn btn-secondary btn-sm" disabled>✓ Registered</button>
+           ${s.meetingUrl ? `<a href="${s.meetingUrl}" target="_blank" class="btn btn-brand btn-sm">Join Meeting</a>` : ''}`
+        : `<button class="btn btn-brand btn-sm" onclick="openReg('${s.id}')">Register →</button>`;
+
+  const tags = (s.tags || []).map(t => `<span class="badge badge-tag">${t}</span>`).join('');
+  const dateStr = formatDate(s.date, s.time, s.timezone);
+
+  return `
+  <div class="session-card ${s.status === 'completed' ? 'completed' : ''}">
+    <div class="session-body">
+      <div class="session-meta">
+        ${statusBadge}
+        ${platformBadge}
+        ${tags}
+      </div>
+      <div class="session-title">${s.title}</div>
+      <div class="session-desc">${s.description}</div>
+      <div class="session-datetime">
+        📅 ${dateStr} &nbsp;·&nbsp; ⏱ ${s.duration} min
+      </div>
+      ${speakers.length ? `
+      <div class="session-speakers">
+        ${speakerAvatars}
+        <span class="speaker-names">${speakerNames}</span>
+      </div>` : ''}
+      <div class="session-actions">${actionBtn}</div>
+    </div>
+    <div class="session-aside">
+      ${s.capacity ? `
+      <div class="capacity-bar">
+        <div class="capacity-label">
+          <span>${s.registered} registered</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="capacity-track">
+          <div class="capacity-fill" style="width:${pct}%"></div>
+        </div>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function platformIcon(p) {
+  return { zoom: '🎥', teams: '💜', meet: '📹' }[p] || '🔗';
+}
+
+function formatDate(date, time, tz) {
+  if (!date) return '—';
+  try {
+    const d = new Date(`${date}T${time || '00:00'}:00Z`);
+    return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long', year:'numeric' })
+      + ' at ' + (time || '—') + ' ' + (tz || 'UTC');
+  } catch(e) { return date; }
+}
+
+// ─── Speakers ────────────────────────────────────────────────────
+function renderSpeakers() {
+  document.getElementById('speakersGrid').innerHTML =
+    DATA.speakers.map(sp => speakerCard(sp)).join('');
+}
+
+function speakerCard(sp) {
+  const topics = (sp.topics || []).map(t => `<span class="badge badge-tag">${t}</span>`).join('');
+  const links = [];
+  if (sp.linkedin) links.push(`<a href="${sp.linkedin}" target="_blank" class="icon-link">🔗 LinkedIn</a>`);
+  if (sp.twitter)  links.push(`<a href="${sp.twitter}"  target="_blank" class="icon-link">🐦 Twitter</a>`);
+
+  return `
+  <div class="speaker-card">
+    <div class="speaker-header">
+      <img class="speaker-avatar" src="${sp.avatar}" alt="${sp.name}">
+      <div>
+        <div class="speaker-name">${sp.name}</div>
+        <div class="speaker-title">${sp.title}</div>
+      </div>
+    </div>
+    <div class="speaker-bio">${sp.bio}</div>
+    <div class="speaker-topics">${topics}</div>
+    ${links.length ? `<div class="speaker-links">${links.join('')}</div>` : ''}
+  </div>`;
+}
+
+// ─── Topic Voting ─────────────────────────────────────────────────
+function renderTopics() {
+  const list = document.getElementById('topicsList');
+  const totalVotes = DATA.topicOptions.reduce((a, t) => a + getTotalVotes(t), 0);
+  list.innerHTML = [...DATA.topicOptions]
+    .sort((a, b) => getTotalVotes(b) - getTotalVotes(a))
+    .map(t => topicCard(t, totalVotes))
+    .join('');
+}
+
+function getTotalVotes(t) {
+  return (t.votes || 0) + (votes[t.id] ? 1 : 0);
+}
+
+function topicCard(t, totalVotes) {
+  const myVote = !!votes[t.id];
+  const count  = getTotalVotes(t);
+  const pct    = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+  const tags   = (t.tags || []).map(tg => `<span class="badge badge-tag">${tg}</span>`).join('');
+
+  return `
+  <div class="topic-card ${myVote ? 'voted' : ''}" id="tc-${t.id}">
+    <button class="vote-btn" onclick="castVote('${t.id}')">
+      <span>${count}</span>
+      <span class="vote-label">${myVote ? '✓ VOTED' : '▲ VOTE'}</span>
+    </button>
+    <div class="topic-body">
+      <div class="topic-title">${t.title}</div>
+      <div class="topic-desc">${t.description}</div>
+      <div class="topic-tags">${tags}</div>
+    </div>
+    <div class="vote-bar-wrap">
+      <div class="vote-pct-label">${pct}% of votes</div>
+      <div class="vote-pct">${pct}%</div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+  </div>`;
+}
+
+function castVote(topicId) {
+  if (votes[topicId]) {
+    delete votes[topicId];
+    showToast('Vote removed.');
+  } else {
+    votes[topicId] = true;
+    showToast('Vote cast! Thanks for your input 🎉');
+  }
+  localStorage.setItem('cf_votes', JSON.stringify(votes));
+  renderTopics();
+}
+
+// ─── Registration ─────────────────────────────────────────────────
+function openReg(sessionId) {
+  activeSession = DATA.sessions.find(s => s.id === sessionId);
+  document.getElementById('modalTitle').textContent = 'Register: ' + (activeSession?.title || '');
+  document.getElementById('regForm').style.display = '';
+  document.getElementById('regSuccess').style.display = 'none';
+  ['regName','regEmail','regOrg'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('regRole').value = '';
+  document.getElementById('regModal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'regModal') document.getElementById('regModal').classList.remove('open');
+}
+
+function submitReg() {
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  if (!name || !email) { showToast('Please fill in your name and email.'); return; }
+  if (!email.includes('@')) { showToast('Please enter a valid email address.'); return; }
+
+  registrations[activeSession.id] = { name, email, ts: Date.now() };
+  localStorage.setItem('cf_regs', JSON.stringify(registrations));
+
+  document.getElementById('regSuccessDetail').textContent =
+    `We've saved your spot for "${activeSession.title}". A calendar invite and meeting link will be sent to ${email}.`;
+
+  document.getElementById('regForm').style.display = 'none';
+  document.getElementById('regSuccess').style.display = '';
+  renderSessions(sessionFilter);
+}
+
+function addToCalendar() {
+  if (!activeSession) return;
+  const start = toICS(activeSession.date, activeSession.time);
+  const end   = toICSEnd(activeSession.date, activeSession.time, activeSession.duration);
+  const loc   = activeSession.meetingUrl || '';
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Courseific//EN',
+    'BEGIN:VEVENT',
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${activeSession.title}`,
+    `DESCRIPTION:${activeSession.description.replace(/\n/g,' ')}`,
+    `LOCATION:${loc}`,
+    `URL:${loc}`,
+    'END:VEVENT', 'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `session-${activeSession.id}.ics`
+  });
+  a.click();
+  showToast('Calendar file downloaded!');
+}
+
+function toICS(date, time) {
+  if (!date) return '';
+  const d = new Date(`${date}T${time || '00:00'}:00Z`);
+  return d.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+}
+function toICSEnd(date, time, dur) {
+  if (!date) return '';
+  const d = new Date(`${date}T${time || '00:00'}:00Z`);
+  d.setMinutes(d.getMinutes() + (dur || 60));
+  return d.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+}
+
+// ─── Toast ───────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

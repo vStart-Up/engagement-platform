@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speak at Courseific Sessions</title>
+  <style>
+    :root {
+      --brand:       #6366f1;
+      --brand-dark:  #4f46e5;
+      --brand-light: #e0e7ff;
+      --surface:     #ffffff;
+      --bg:          #f8f9fc;
+      --border:      #e5e7eb;
+      --text:        #111827;
+      --muted:       #6b7280;
+      --success:     #10b981;
+      --danger:      #ef4444;
+      --radius:      12px;
+      --shadow:      0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6; font-size: 15px;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ── Nav ── */
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .nav-logo { font-weight: 700; font-size: 18px; color: var(--brand); display: flex; align-items: center; gap: 8px; }
+    .nav-logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      color: var(--muted); transition: all .15s; border: none; background: none;
+    }
+    .nav-link:hover { color: var(--brand); background: var(--brand-light); }
+    .nav-link.active { color: var(--brand); background: var(--brand-light); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #ec4899 100%);
+      color: #fff; padding: 64px 24px; text-align: center;
+    }
+    .hero-tag {
+      display: inline-block; background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
+      padding: 4px 14px; border-radius: 20px; font-size: 13px;
+      font-weight: 500; margin-bottom: 20px;
+    }
+    .hero h1 { font-size: clamp(26px, 4vw, 46px); font-weight: 800; line-height: 1.2; margin-bottom: 14px; }
+    .hero p  { font-size: 16px; opacity: .85; max-width: 540px; margin: 0 auto; }
+
+    /* ── Why section ── */
+    .why-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+      max-width: 900px; margin: 48px auto; padding: 0 24px;
+    }
+    .why-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow); text-align: center;
+    }
+    .why-icon { font-size: 32px; margin-bottom: 10px; }
+    .why-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .why-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Form ── */
+    .form-shell {
+      max-width: 780px; margin: 0 auto 64px; padding: 0 24px;
+    }
+    .form-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .form-section {
+      padding: 28px 32px; border-bottom: 1px solid var(--border);
+    }
+    .form-section:last-child { border-bottom: none; }
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; color: var(--brand); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--brand-light);
+    }
+
+    .form-grid { display: grid; gap: 16px; }
+    .form-grid.two { grid-template-columns: 1fr 1fr; }
+    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-row label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: var(--muted); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+      border-radius: 9px; font-size: 14px; font-family: inherit;
+      background: var(--bg); color: var(--text); transition: border-color .15s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      outline: none; border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.1); background: #fff;
+    }
+    .form-row textarea { resize: vertical; min-height: 90px; }
+    .form-row .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    /* ── Chip selects ── */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+    .chip {
+      padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      border: 2px solid var(--border); background: var(--bg); color: var(--muted);
+      cursor: pointer; transition: all .15s; user-select: none;
+    }
+    .chip:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+    .chip.selected { border-color: var(--brand); background: var(--brand); color: #fff; }
+
+    /* ── Duration grid ── */
+    .dur-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+    .dur-card {
+      border: 2px solid var(--border); border-radius: 10px;
+      padding: 14px 10px; text-align: center; cursor: pointer;
+      transition: all .15s; background: var(--bg);
+    }
+    .dur-card:hover { border-color: var(--brand); background: var(--brand-light); }
+    .dur-card.selected { border-color: var(--brand); background: var(--brand); color: #fff; }
+    .dur-card .dur-val { font-size: 22px; font-weight: 800; }
+    .dur-card .dur-unit { font-size: 11px; opacity: .7; margin-top: 2px; font-weight: 600; letter-spacing: .4px; }
+
+    /* ── Availability ── */
+    .day-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .day-chip {
+      width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: var(--bg); color: var(--muted); transition: all .15s; user-select: none;
+    }
+    .day-chip:hover { border-color: var(--brand); color: var(--brand); }
+    .day-chip.selected { border-color: var(--brand); background: var(--brand); color: #fff; }
+
+    /* ── Submit section ── */
+    .submit-section {
+      padding: 28px 32px; background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 12px 28px; border-radius: 9px; font-size: 15px;
+      font-weight: 700; border: none; transition: all .15s; cursor: pointer;
+    }
+    .btn-brand { background: var(--brand); color: #fff; }
+    .btn-brand:hover { background: var(--brand-dark); transform: translateY(-1px); }
+    .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 14px; }
+    .btn-secondary:hover { background: var(--border); }
+    .submit-note { font-size: 12px; color: var(--muted); }
+
+    /* ── Progress bar ── */
+    .progress-bar {
+      height: 4px; background: var(--border);
+      position: sticky; top: 64px; z-index: 50;
+    }
+    .progress-fill {
+      height: 100%; background: var(--brand);
+      transition: width .3s; border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Validation ── */
+    .form-row input.error, .form-row textarea.error, .form-row select.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+    }
+    .field-error { font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+    /* ── Success ── */
+    #successScreen {
+      display: none; text-align: center; padding: 64px 24px;
+    }
+    .success-icon { font-size: 64px; margin-bottom: 20px; }
+    #successScreen h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+    #successScreen p { color: var(--muted); font-size: 16px; max-width: 460px; margin: 0 auto 28px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px; z-index: 300;
+      background: var(--text); color: #fff; padding: 12px 20px;
+      border-radius: 10px; font-size: 14px; font-weight: 500;
+      transform: translateY(80px); opacity: 0; transition: all .3s;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,.6);
+      padding: 32px 24px; text-align: center; font-size: 13px;
+    }
+    footer a { color: rgba(255,255,255,.5); margin: 0 12px; }
+    footer a:hover { color: #fff; }
+
+    @media (max-width: 640px) {
+      .form-grid.two, .form-grid.three { grid-template-columns: 1fr; }
+      .dur-grid { grid-template-columns: repeat(2,1fr); }
+      .form-section { padding: 20px; }
+      .why-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────── -->
+<header>
+  <div class="nav">
+    <a class="nav-logo" href="index.html">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="8" fill="#6366f1"/>
+        <path d="M8 20 L14 8 L20 20" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10.5 15.5 H17.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Courseific Sessions
+    </a>
+    <div class="nav-links">
+      <a class="nav-link" href="index.html">Sessions</a>
+      <a class="nav-link" href="index.html#speakers">Speakers</a>
+      <a class="nav-link" href="index.html#vote">Vote</a>
+      <a class="nav-link active" href="speak.html">Speak</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── PROGRESS ─────────────────────────────────────────────────── -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<!-- ── HERO ─────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-tag">🎙 Speaker Applications</div>
+  <h1>Share Your Expertise<br>with a Global Audience</h1>
+  <p>We connect practitioners with a community of engineers, architects, and technology leaders. Tell us what you know — we'll handle the rest.</p>
+</section>
+
+<!-- ── WHY ──────────────────────────────────────────────────────── -->
+<div class="why-row">
+  <div class="why-card">
+    <div class="why-icon">🌍</div>
+    <div class="why-title">Global Reach</div>
+    <div class="why-desc">Sessions are open to practitioners worldwide, across time zones and industries.</div>
+  </div>
+  <div class="why-card">
+    <div class="why-icon">🎯</div>
+    <div class="why-title">Community-Selected</div>
+    <div class="why-desc">Topics are voted on by the community — your session is built around genuine demand.</div>
+  </div>
+  <div class="why-card">
+    <div class="why-icon">⚙️</div>
+    <div class="why-title">We Handle Logistics</div>
+    <div class="why-desc">Platform, invites, recording, promotion — you focus on the content.</div>
+  </div>
+</div>
+
+<!-- ── FORM ──────────────────────────────────────────────────────── -->
+<div class="form-shell">
+
+  <!-- Application form -->
+  <form id="applicationForm" novalidate>
+    <div class="form-card">
+
+      <!-- 1. Personal Details -->
+      <div class="form-section">
+        <div class="section-label">01 &nbsp; About You</div>
+        <div class="form-grid two">
+          <div class="form-row">
+            <label>Full Name *</label>
+            <input type="text" id="f-name" placeholder="Jane Smith" />
+          </div>
+          <div class="form-row">
+            <label>Professional Title *</label>
+            <input type="text" id="f-title" placeholder="Principal Architect, FAANG" />
+          </div>
+          <div class="form-row">
+            <label>Work Email *</label>
+            <input type="email" id="f-email" placeholder="jane@company.com" />
+          </div>
+          <div class="form-row">
+            <label>Organisation *</label>
+            <input type="text" id="f-org" placeholder="Acme Corp" />
+          </div>
+          <div class="form-row">
+            <label>LinkedIn Profile</label>
+            <input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/…" />
+          </div>
+          <div class="form-row">
+            <label>Personal Website / Portfolio</label>
+            <input type="url" id="f-website" placeholder="https://…" />
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:16px">
+          <div class="form-row">
+            <label>Short Bio * <span style="font-weight:400;text-transform:none">(shown to community — 2–4 sentences)</span></label>
+            <textarea id="f-bio" placeholder="Describe your background, expertise, and what makes your perspective unique…" rows="4"></textarea>
+            <div class="hint">Target: 60–120 words. This will appear verbatim on your speaker card.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Topics -->
+      <div class="form-section">
+        <div class="section-label">02 &nbsp; Topics You Can Speak On</div>
+
+        <div class="form-row" style="margin-bottom:16px">
+          <label>Select all that apply</label>
+          <div class="chip-group" id="topicChips">
+            <div class="chip" data-val="Systems Architecture">Systems Architecture</div>
+            <div class="chip" data-val="AI & Machine Learning">AI & Machine Learning</div>
+            <div class="chip" data-val="Platform Engineering">Platform Engineering</div>
+            <div class="chip" data-val="Developer Experience">Developer Experience</div>
+            <div class="chip" data-val="Cloud & Infrastructure">Cloud & Infrastructure</div>
+            <div class="chip" data-val="Engineering Leadership">Engineering Leadership</div>
+            <div class="chip" data-val="Technology Strategy">Technology Strategy</div>
+            <div class="chip" data-val="Security & Compliance">Security & Compliance</div>
+            <div class="chip" data-val="Data & Analytics">Data & Analytics</div>
+            <div class="chip" data-val="Product Engineering">Product Engineering</div>
+            <div class="chip" data-val="Agile & Delivery">Agile & Delivery</div>
+            <div class="chip" data-val="Open Source">Open Source</div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:8px">
+          <div class="form-row">
+            <label>Specific Topic Proposals *</label>
+            <textarea id="f-topicProposal" placeholder="e.g. 'How to build a compliance-by-design architecture on AWS' or 'From IC to CTO — lessons from 20 years in engineering leadership'&#10;&#10;List up to 3 specific session titles or ideas, one per line." rows="5"></textarea>
+            <div class="hint">Be specific — this helps us match you to community votes and schedule faster.</div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px">
+          <label>Session Format Preferences</label>
+          <div class="chip-group" id="formatChips">
+            <div class="chip" data-val="Talk (solo presentation)">🎤 Talk (solo)</div>
+            <div class="chip" data-val="Panel Discussion">👥 Panel</div>
+            <div class="chip" data-val="Workshop / Hands-on">🛠 Workshop</div>
+            <div class="chip" data-val="Fireside Chat / Q&A">🔥 Fireside Chat / Q&A</div>
+            <div class="chip" data-val="Demo / Show & Tell">💻 Demo / Show & Tell</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Duration -->
+      <div class="form-section">
+        <div class="section-label">03 &nbsp; Session Duration</div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:18px">Select all durations you're comfortable delivering. Longer slots include Q&A time.</p>
+        <div class="dur-grid" id="durGrid">
+          <div class="dur-card" data-val="30">
+            <div class="dur-val">30</div>
+            <div class="dur-unit">MIN</div>
+            <div style="font-size:10px; margin-top:6px; opacity:.65">Lightning talk</div>
+          </div>
+          <div class="dur-card" data-val="45">
+            <div class="dur-val">45</div>
+            <div class="dur-unit">MIN</div>
+            <div style="font-size:10px; margin-top:6px; opacity:.65">Standard session</div>
+          </div>
+          <div class="dur-card" data-val="60">
+            <div class="dur-val">60</div>
+            <div class="dur-unit">MIN</div>
+            <div style="font-size:10px; margin-top:6px; opacity:.65">Full session + Q&A</div>
+          </div>
+          <div class="dur-card" data-val="90">
+            <div class="dur-val">90</div>
+            <div class="dur-unit">MIN</div>
+            <div style="font-size:10px; margin-top:6px; opacity:.65">Workshop / deep-dive</div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:16px">
+          <label>Ideal session cadence</label>
+          <select id="f-cadence">
+            <option value="">Select…</option>
+            <option value="One-off / single session">One-off / single session</option>
+            <option value="Series of 2–3 sessions">Series of 2–3 sessions</option>
+            <option value="Recurring monthly">Recurring monthly</option>
+            <option value="Recurring quarterly">Recurring quarterly</option>
+            <option value="Open to whatever works">Open to whatever works</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 4. Availability -->
+      <div class="form-section">
+        <div class="section-label">04 &nbsp; Availability</div>
+        <div class="form-grid two">
+          <div class="form-row">
+            <label>Primary Time Zone *</label>
+            <select id="f-timezone">
+              <option value="">Select time zone…</option>
+              <option value="UTC">UTC</option>
+              <option value="UTC+1 (BST / CET)">UTC+1 (BST / CET)</option>
+              <option value="UTC+2 (CEST / EET)">UTC+2 (CEST / EET)</option>
+              <option value="UTC+3 (Moscow / East Africa)">UTC+3 (Moscow / East Africa)</option>
+              <option value="UTC+5:30 (IST)">UTC+5:30 (IST)</option>
+              <option value="UTC+8 (SGT / CST / AWST)">UTC+8 (SGT / CST / AWST)</option>
+              <option value="UTC+9 (JST / KST)">UTC+9 (JST / KST)</option>
+              <option value="UTC+10 (AEST)">UTC+10 (AEST)</option>
+              <option value="UTC-5 (EST)">UTC-5 (EST)</option>
+              <option value="UTC-6 (CST)">UTC-6 (CST)</option>
+              <option value="UTC-7 (MST / PDT)">UTC-7 (MST / PDT)</option>
+              <option value="UTC-8 (PST)">UTC-8 (PST)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Earliest available date</label>
+            <input type="date" id="f-earliest" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px">
+          <label>Preferred days of the week</label>
+          <div class="day-grid" id="dayGrid">
+            <div class="day-chip" data-val="Mon">Mon</div>
+            <div class="day-chip" data-val="Tue">Tue</div>
+            <div class="day-chip" data-val="Wed">Wed</div>
+            <div class="day-chip" data-val="Thu">Thu</div>
+            <div class="day-chip" data-val="Fri">Fri</div>
+            <div class="day-chip" data-val="Sat">Sat</div>
+            <div class="day-chip" data-val="Sun">Sun</div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px">
+          <label>Preferred time of day (in your time zone)</label>
+          <div class="chip-group" id="timeChips">
+            <div class="chip" data-val="Morning (06:00–12:00)">🌅 Morning</div>
+            <div class="chip" data-val="Afternoon (12:00–18:00)">☀️ Afternoon</div>
+            <div class="chip" data-val="Evening (18:00–22:00)">🌆 Evening</div>
+            <div class="chip" data-val="Flexible">🔄 Flexible</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Experience & Additional -->
+      <div class="form-section">
+        <div class="section-label">05 &nbsp; Speaking Experience</div>
+        <div class="form-grid two">
+          <div class="form-row">
+            <label>Speaking Experience Level</label>
+            <select id="f-experience">
+              <option value="">Select…</option>
+              <option value="First time (excited to start)">First time — excited to start</option>
+              <option value="Some experience (1–5 talks)">Some experience — 1–5 talks</option>
+              <option value="Regular speaker (5–20 talks)">Regular speaker — 5–20 talks</option>
+              <option value="Seasoned speaker (20+ talks)">Seasoned speaker — 20+ talks</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Preferred Meeting Platform</label>
+            <select id="f-platform">
+              <option value="">No preference</option>
+              <option value="Zoom">Zoom</option>
+              <option value="Google Meet">Google Meet</option>
+              <option value="Microsoft Teams">Microsoft Teams</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px">
+          <label>Links to past talks or publications <span style="font-weight:400;text-transform:none">(optional)</span></label>
+          <textarea id="f-links" placeholder="YouTube links, conference recordings, blog posts, papers — one per line" rows="3"></textarea>
+        </div>
+
+        <div class="form-row" style="margin-top:16px">
+          <label>Anything else you'd like us to know?</label>
+          <textarea id="f-notes" placeholder="Co-speaker preferences, special requirements, languages you can present in, etc." rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-section">
+        <button type="submit" class="btn btn-brand" id="submitBtn">
+          Submit Application →
+        </button>
+        <a href="index.html" class="btn btn-secondary">Cancel</a>
+        <p class="submit-note">We review applications within 5 business days and respond to every submission.</p>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- Success -->
+  <div id="successScreen">
+    <div class="success-icon">🎙️</div>
+    <h2>Application Received!</h2>
+    <p>Thanks for putting your hand up. We'll review your submission and be in touch within 5 business days.</p>
+    <a href="index.html" class="btn btn-brand">← Back to Sessions</a>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <div id="footerBrand" style="font-weight:700; color:#fff; margin-bottom:10px">Courseific Sessions</div>
+  <div>
+    <a href="index.html">Sessions</a>
+    <a href="index.html">Speakers</a>
+    <a href="speak.html">Speak</a>
+    <a href="admin.html">Admin</a>
+  </div>
+</footer>
+
+<script>
+// ─── Multi-select chip helpers ────────────────────────────────────
+function bindChips(containerId) {
+  document.getElementById(containerId).querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+  });
+}
+function bindDurCards() {
+  document.getElementById('durGrid').querySelectorAll('.dur-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('selected'));
+  });
+}
+function bindDayChips() {
+  document.getElementById('dayGrid').querySelectorAll('.day-chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+  });
+}
+function getSelected(containerId) {
+  return [...document.getElementById(containerId).querySelectorAll('.chip.selected, .dur-card.selected, .day-chip.selected')]
+    .map(el => el.dataset.val);
+}
+
+bindChips('topicChips');
+bindChips('formatChips');
+bindChips('timeChips');
+bindDurCards();
+bindDayChips();
+
+// ─── Progress tracking ────────────────────────────────────────────
+const FIELDS = ['f-name','f-title','f-email','f-org','f-bio','f-topicProposal','f-timezone'];
+function updateProgress() {
+  const filled = FIELDS.filter(id => document.getElementById(id)?.value.trim()).length;
+  const topicsOk = document.querySelectorAll('#topicChips .chip.selected').length > 0 ? 1 : 0;
+  const durOk    = document.querySelectorAll('#durGrid .dur-card.selected').length > 0 ? 1 : 0;
+  const pct = Math.round(((filled + topicsOk + durOk) / (FIELDS.length + 2)) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+document.getElementById('applicationForm').addEventListener('input', updateProgress);
+document.getElementById('topicChips').addEventListener('click', updateProgress);
+document.getElementById('durGrid').addEventListener('click', updateProgress);
+
+// ─── Validation ───────────────────────────────────────────────────
+function validate() {
+  let ok = true;
+  const required = [
+    { id: 'f-name',          msg: 'Full name is required.' },
+    { id: 'f-title',         msg: 'Professional title is required.' },
+    { id: 'f-email',         msg: 'Work email is required.' },
+    { id: 'f-org',           msg: 'Organisation is required.' },
+    { id: 'f-bio',           msg: 'A short bio is required.' },
+    { id: 'f-topicProposal', msg: 'Please describe at least one session idea.' },
+    { id: 'f-timezone',      msg: 'Please select your time zone.' }
+  ];
+  required.forEach(({ id, msg }) => {
+    const el = document.getElementById(id);
+    const errId = id + '-err';
+    let errEl = document.getElementById(errId);
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = errId; errEl.className = 'field-error';
+      el.parentNode.appendChild(errEl);
+    }
+    if (!el.value.trim()) {
+      el.classList.add('error'); errEl.textContent = msg; ok = false;
+    } else {
+      el.classList.remove('error'); errEl.textContent = '';
+    }
+  });
+  if (document.getElementById('f-email').value && !document.getElementById('f-email').value.includes('@')) {
+    document.getElementById('f-email').classList.add('error');
+    const errEl = document.getElementById('f-email-err');
+    if (errEl) errEl.textContent = 'Enter a valid email address.';
+    ok = false;
+  }
+  if (!getSelected('topicChips').length) {
+    showToast('Please select at least one topic area.');
+    ok = false;
+  }
+  if (!getSelected('durGrid').length) {
+    showToast('Please select at least one session duration.');
+    ok = false;
+  }
+  return ok;
+}
+
+// ─── Submit ───────────────────────────────────────────────────────
+document.getElementById('applicationForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (!validate()) return;
+
+  const submission = {
+    id: 'app-' + Date.now(),
+    submittedAt: new Date().toISOString(),
+    status: 'pending',
+    personal: {
+      name:     document.getElementById('f-name').value.trim(),
+      title:    document.getElementById('f-title').value.trim(),
+      email:    document.getElementById('f-email').value.trim(),
+      org:      document.getElementById('f-org').value.trim(),
+      linkedin: document.getElementById('f-linkedin').value.trim(),
+      website:  document.getElementById('f-website').value.trim(),
+      bio:      document.getElementById('f-bio').value.trim()
+    },
+    session: {
+      topicAreas:    getSelected('topicChips'),
+      topicProposal: document.getElementById('f-topicProposal').value.trim(),
+      formats:       getSelected('formatChips'),
+      durations:     getSelected('durGrid').map(Number),
+      cadence:       document.getElementById('f-cadence').value
+    },
+    availability: {
+      timezone:  document.getElementById('f-timezone').value,
+      earliest:  document.getElementById('f-earliest').value,
+      days:      getSelected('dayGrid'),
+      timeOfDay: getSelected('timeChips')
+    },
+    experience: {
+      level:    document.getElementById('f-experience').value,
+      platform: document.getElementById('f-platform').value,
+      links:    document.getElementById('f-links').value.trim(),
+      notes:    document.getElementById('f-notes').value.trim()
+    }
+  };
+
+  // Persist to localStorage (admin panel reads from here)
+  const existing = JSON.parse(localStorage.getItem('cf_applications') || '[]');
+  existing.push(submission);
+  localStorage.setItem('cf_applications', JSON.stringify(existing));
+
+  // Show success
+  document.getElementById('applicationForm').style.display = 'none';
+  document.getElementById('successScreen').style.display = '';
+  document.getElementById('progressFill').style.width = '100%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ─── Platform branding ────────────────────────────────────────────
+async function loadBranding() {
+  try {
+    const r = await fetch('data.json');
+    const d = await r.json();
+    if (d.platform?.name) {
+      document.title = `Speak at ${d.platform.name}`;
+      document.getElementById('footerBrand').textContent = d.platform.name;
+    }
+  } catch(e) {}
+}
+loadBranding();
+</script>
+</body>
+</html>

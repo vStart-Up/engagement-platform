@@ -1,0 +1,133 @@
+{
+  "platform": {
+    "name": "Courseific Sessions",
+    "tagline": "Community-driven learning, globally connected",
+    "adminPassword": "changeme123",
+    "contactEmail": "naveenjonty@gmail.com"
+  },
+  "speakers": [
+    {
+      "id": "spk-001",
+      "name": "Jonty Naveen",
+      "title": "Technology Leader & Strategist",
+      "bio": "Two decades at the intersection of Engineering and Strategy. Specializes in systems design, enterprise architecture, and technology-led transformation across global organisations.",
+      "avatar": "https://ui-avatars.com/api/?name=Jonty+Naveen&background=6366f1&color=fff&size=128",
+      "linkedin": "https://linkedin.com/in/",
+      "twitter": "",
+      "topics": ["Systems Architecture", "Enterprise Strategy", "Technology Leadership"]
+    },
+    {
+      "id": "spk-002",
+      "name": "Priya Mehta",
+      "title": "Head of Platform Engineering",
+      "bio": "15 years building distributed systems at scale. Passionate about developer experience, platform thinking, and making complex infrastructure invisible to product teams.",
+      "avatar": "https://ui-avatars.com/api/?name=Priya+Mehta&background=8b5cf6&color=fff&size=128",
+      "linkedin": "https://linkedin.com/in/",
+      "twitter": "",
+      "topics": ["Platform Engineering", "DevEx", "Distributed Systems"]
+    },
+    {
+      "id": "spk-003",
+      "name": "Marcus Chen",
+      "title": "Principal Architect, Cloud & AI",
+      "bio": "Designs AI-native architectures for Fortune 500 companies. Former engineering lead at two unicorn startups. Advisor on responsible AI adoption at the enterprise level.",
+      "avatar": "https://ui-avatars.com/api/?name=Marcus+Chen&background=ec4899&color=fff&size=128",
+      "linkedin": "https://linkedin.com/in/",
+      "twitter": "",
+      "topics": ["AI Architecture", "Cloud-Native", "Enterprise AI"]
+    }
+  ],
+  "topicOptions": [
+    {
+      "id": "top-001",
+      "title": "Architecting for AI-Native Enterprises",
+      "description": "How to redesign organisational and technical architecture when AI is a first-class citizen, not a bolt-on.",
+      "votes": 14,
+      "tags": ["Architecture", "AI", "Enterprise"]
+    },
+    {
+      "id": "top-002",
+      "title": "Platform Engineering at Scale",
+      "description": "Internal developer platforms, golden paths, and the organisational change needed to make them stick.",
+      "votes": 11,
+      "tags": ["Platform", "DevEx", "Engineering"]
+    },
+    {
+      "id": "top-003",
+      "title": "Technology Strategy for Non-Technical Boards",
+      "description": "Communicating complex technical direction to board-level stakeholders — frameworks and real-world patterns.",
+      "votes": 9,
+      "tags": ["Strategy", "Leadership", "Communication"]
+    },
+    {
+      "id": "top-004",
+      "title": "Compliance-by-Design in Modern Systems",
+      "description": "Building GDPR, SOC2, and ISO 27001 compliance into the architecture from day one, not after the fact.",
+      "votes": 7,
+      "tags": ["Compliance", "Security", "Architecture"]
+    },
+    {
+      "id": "top-005",
+      "title": "Engineering Leadership Playbook",
+      "description": "From IC to CTO — how to scale yourself, build high-trust teams, and maintain technical credibility.",
+      "votes": 6,
+      "tags": ["Leadership", "Engineering", "Career"]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "ses-001",
+      "title": "Architecting for AI-Native Enterprises",
+      "description": "A deep-dive into how enterprise architecture must evolve when AI moves from project to platform. We'll cover data contracts, model governance, and the org structures that enable AI at scale.",
+      "date": "2026-06-25",
+      "time": "17:00",
+      "timezone": "UTC",
+      "duration": 60,
+      "status": "upcoming",
+      "speakerIds": ["spk-001", "spk-003"],
+      "capacity": 200,
+      "registered": 87,
+      "meetingPlatform": "zoom",
+      "meetingUrl": "https://zoom.us/j/example",
+      "calendarUrl": "",
+      "tags": ["Architecture", "AI", "Enterprise"],
+      "recordingUrl": ""
+    },
+    {
+      "id": "ses-002",
+      "title": "Platform Engineering at Scale",
+      "description": "From golden paths to self-service infrastructure — a practitioner's guide to building internal developer platforms that development teams actually adopt.",
+      "date": "2026-07-10",
+      "time": "15:00",
+      "timezone": "UTC",
+      "duration": 60,
+      "status": "upcoming",
+      "speakerIds": ["spk-002"],
+      "capacity": 150,
+      "registered": 43,
+      "meetingPlatform": "teams",
+      "meetingUrl": "https://teams.microsoft.com/l/meetup-join/example",
+      "calendarUrl": "",
+      "tags": ["Platform", "DevEx", "Engineering"],
+      "recordingUrl": ""
+    },
+    {
+      "id": "ses-003",
+      "title": "Engineering Leadership Playbook",
+      "description": "A candid conversation on scaling technical leadership — how to stay close to the code while driving org-wide strategy.",
+      "date": "2026-05-15",
+      "time": "16:00",
+      "timezone": "UTC",
+      "duration": 90,
+      "status": "completed",
+      "speakerIds": ["spk-001"],
+      "capacity": 100,
+      "registered": 100,
+      "meetingPlatform": "meet",
+      "meetingUrl": "",
+      "calendarUrl": "",
+      "tags": ["Leadership", "Engineering"],
+      "recordingUrl": "https://youtube.com/watch?v=example"
+    }
+  ]
+}
